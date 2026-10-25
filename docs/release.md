@@ -2,7 +2,7 @@
 
 ## CI
 
-`.github/workflows/build.yml` runs on every push to `master` and on pull
+`.github/workflows/build.yml` runs on every push to `main` and on pull
 requests. It runs `go test ./...`, then builds static binaries
 (`CGO_ENABLED=0`) with `make build` for:
 
