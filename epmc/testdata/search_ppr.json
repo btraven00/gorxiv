@@ -1,0 +1,217 @@
+{
+  "version": "6.9",
+  "hitCount": 1,
+  "nextCursorMark": "AoIIP/owhyg0NjYwNTg5OA==",
+  "request": {
+    "queryString": "DOI:\"10.64898/2026.08.24.746802\"",
+    "resultType": "core",
+    "cursorMark": "*",
+    "pageSize": 25,
+    "sort": "",
+    "synonym": false
+  },
+  "resultList": {
+    "result": [
+      {
+        "id": "PPR1305187",
+        "source": "PPR",
+        "doi": "10.64898/2026.08.24.746802",
+        "title": "Dissecting context-dependent cancer vulnerabilities using Perturb-seq",
+        "authorString": "Maffa S, Boyle IA, Ward L, Colgan WN, Borck P, Simerzin A, Adeagbo A, Olajide O, Wie S, Liang H, Wienand K, Shibue T, Ray J, Paolella B, Campbell CD, Vazquez F, Dempster JM.",
+        "authorList": {
+          "author": [
+            {
+              "fullName": "Maffa S",
+              "lastName": "Maffa",
+              "firstName": "Samuel",
+              "initials": "S",
+              "authorId": {
+                "type": "ORCID",
+                "value": "0009-0008-8862-178X"
+              }
+            },
+            {
+              "fullName": "Boyle IA",
+              "lastName": "Boyle",
+              "firstName": "Isabella",
+              "initials": "IA",
+              "authorId": {
+                "type": "ORCID",
+                "value": "0000-0002-8138-1225"
+              }
+            },
+            {
+              "fullName": "Ward L",
+              "lastName": "Ward",
+              "firstName": "Lie",
+              "initials": "L"
+            },
+            {
+              "fullName": "Colgan WN",
+              "lastName": "Colgan",
+              "firstName": "William",
+              "initials": "WN",
+              "authorId": {
+                "type": "ORCID",
+                "value": "0000-0002-8328-4672"
+              }
+            },
+            {
+              "fullName": "Borck P",
+              "lastName": "Borck",
+              "firstName": "Patricia",
+              "initials": "P"
+            },
+            {
+              "fullName": "Simerzin A",
+              "lastName": "Simerzin",
+              "firstName": "Alina",
+              "initials": "A",
+              "authorId": {
+                "type": "ORCID",
+                "value": "0000-0003-1397-3074"
+              }
+            },
+            {
+              "fullName": "Adeagbo A",
+              "lastName": "Adeagbo",
+              "firstName": "Anisah",
+              "initials": "A"
+            },
+            {
+              "fullName": "Olajide O",
+              "lastName": "Olajide",
+              "firstName": "Oluwatomisin",
+              "initials": "O"
+            },
+            {
+              "fullName": "Wie S",
+              "lastName": "Wie",
+              "firstName": "Sarah",
+              "initials": "S"
+            },
+            {
+              "fullName": "Liang H",
+              "lastName": "Liang",
+              "firstName": "Harry",
+              "initials": "H"
+            },
+            {
+              "fullName": "Wienand K",
+              "lastName": "Wienand",
+              "firstName": "Kirsty",
+              "initials": "K"
+            },
+            {
+              "fullName": "Shibue T",
+              "lastName": "Shibue",
+              "firstName": "Tsukasa",
+              "initials": "T"
+            },
+            {
+              "fullName": "Ray J",
+              "lastName": "Ray",
+              "firstName": "Judhajeet",
+              "initials": "J",
+              "authorId": {
+                "type": "ORCID",
+                "value": "0000-0003-1524-2603"
+              }
+            },
+            {
+              "fullName": "Paolella B",
+              "lastName": "Paolella",
+              "firstName": "Brenton",
+              "initials": "B"
+            },
+            {
+              "fullName": "Campbell CD",
+              "lastName": "Campbell",
+              "firstName": "Catarina",
+              "initials": "CD"
+            },
+            {
+              "fullName": "Vazquez F",
+              "lastName": "Vazquez",
+              "firstName": "Francisca",
+              "initials": "F"
+            },
+            {
+              "fullName": "Dempster JM",
+              "lastName": "Dempster",
+              "firstName": "Joshua",
+              "initials": "JM"
+            }
+          ]
+        },
+        "authorIdList": {
+          "authorId": [
+            {
+              "type": "ORCID",
+              "value": "0000-0002-8138-1225"
+            },
+            {
+              "type": "ORCID",
+              "value": "0000-0002-8328-4672"
+            },
+            {
+              "type": "ORCID",
+              "value": "0000-0003-1397-3074"
+            },
+            {
+              "type": "ORCID",
+              "value": "0000-0003-1524-2603"
+            },
+            {
+              "type": "ORCID",
+              "value": "0009-0008-8862-178X"
+            }
+          ]
+        },
+        "pubYear": "2026",
+        "abstractText": "<h4>Background: </h4> CRISPR-mediated viability assays in diverse cancer cell lines have informed cancer biology and precision medicine, but cell fitness is not the only cancer-relevant phenotype. Gene expression profiling provides insight into cellular stress, inflammation, and differential state, while still identifying activation of cell-death pathways. Perturb-seq allows scalable functional genomics screening of expression phenotypes at single-cell resolution, however existing datasets cover only a small number of work-horse cell lines. Results \tWe produced a proof-of-concept Perturb-seq dataset targeting 100 genes in 16 diverse cancer cell lines. In the process, we established methods to address single-cell technical artifacts, identified Cas9-mediated chromosomal aberrations and assessed screen quality. Even with a limited library, we observed common signatures of deleting essential genes as well as context-specific responses based on intrinsic genomic properties of the models. For example, we inferred a previously undescribed relationship between dependence on the ER-golgi transport gene immediate early response 3 interacting protein 1 (IER3IP1) and oxidative stress, demonstrating the potential of integrated Perturb-seq for hypothesis generation.  Conclusions \tWe established a framework for building a comprehensive map of post-perturbational transcriptional phenotypes using parallel Perturb-seq experiments across multiple cell lines. We demonstrated that integrated Perturb-seq experiments spanning diverse contexts enable hypotheses about gene function specific to tissue types or cancer subtypes - suggesting large-scale, genome-wide datasets would offer invaluable insight into the highly context-dependent nature of cancer biology.",
+        "pubTypeList": {
+          "pubType": [
+            "Preprint"
+          ]
+        },
+        "bookOrReportDetails": {
+          "publisher": "bioRxiv",
+          "yearOfPublication": 2026
+        },
+        "fullTextUrlList": {
+          "fullTextUrl": [
+            {
+              "availability": "Free",
+              "availabilityCode": "F",
+              "documentStyle": "doi",
+              "site": "DOI",
+              "url": "https://doi.org/10.64898/2026.08.24.746802"
+            }
+          ]
+        },
+        "isOpenAccess": "N",
+        "inEPMC": "N",
+        "inPMC": "N",
+        "citedByCount": 0,
+        "hasReferences": "N",
+        "hasTextMinedTerms": "Y",
+        "hasDbCrossReferences": "N",
+        "hasPDF": "N",
+        "hasBook": "N",
+        "hasSuppl": "N",
+        "hasLabsLinks": "N",
+        "hasData": "N",
+        "license": "cc by-nd",
+        "authMan": "N",
+        "epmcAuthMan": "N",
+        "nihAuthMan": "N",
+        "hasTMAccessionNumbers": "N",
+        "dateOfCreation": "2026-08-26",
+        "firstPublicationDate": "2026-08-25",
+        "firstIndexDate": "2026-08-26",
+        "hasEvaluations": "N"
+      }
+    ]
+  }
+}
