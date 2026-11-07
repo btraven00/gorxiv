@@ -3,6 +3,7 @@ package cmd
 import (
 	"context"
 	"fmt"
+	"io"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -21,8 +22,36 @@ import (
 
 type item struct{ r *epmc.Record }
 
-func (i item) Title() string       { return epmc.StripTags(i.r.Title) }
-func (i item) Description() string { return meta(i.r) }
+func (i item) Title() string { return epmc.StripTags(i.r.Title) }
+
+// Description marks records whose PDF is already in cfg.PDFDir.
+// ponytail: one stat per visible row per render; cache in setResults if it ever lags.
+func (i item) Description() string {
+	if saved(i.r) {
+		return meta(i.r) + stOA.Render(" · ✓ pdf")
+	}
+	return meta(i.r)
+}
+
+// oaDelegate draws the default row in a 2-column gutter holding a green ● for
+// open-access records (ANSI inside Title would cancel the selected-row style).
+type oaDelegate struct{ list.DefaultDelegate }
+
+func (d oaDelegate) Render(w io.Writer, m list.Model, i int, li list.Item) {
+	var b strings.Builder
+	m.SetWidth(m.Width() - 2) // m is a copy; keeps truncation inside the gutter
+	d.DefaultDelegate.Render(&b, m, i, li)
+	g := "  "
+	if it, ok := li.(item); ok && it.r.IsOpenAccess == "Y" {
+		g = stOA.Render("●") + " "
+	}
+	l1, l2, _ := strings.Cut(b.String(), "\n")
+	fmt.Fprint(w, g+l1+"\n  "+l2)
+}
+
+func pdfPath(r *epmc.Record) string { return filepath.Join(cfg.PDFDir, slug(shortID(r))+".pdf") }
+
+func saved(r *epmc.Record) bool    { _, err := os.Stat(pdfPath(r)); return err == nil }
 func (i item) FilterValue() string { return i.Title() + " " + i.r.AuthorString + " " + shortID(i.r) }
 
 type (
@@ -46,6 +75,7 @@ type tuiModel struct {
 	sort       string
 	hits       int
 	status     string
+	confirm    string // id awaiting a second `p` to re-download
 }
 
 var (
@@ -54,13 +84,16 @@ var (
 	keyMore   = key.NewBinding(key.WithKeys("n"), key.WithHelp("n", "load more"))
 	keyPDF    = key.NewBinding(key.WithKeys("p"), key.WithHelp("p", "pdf"))
 	keyOpen   = key.NewBinding(key.WithKeys("o"), key.WithHelp("o", "open pdf"))
+	keyPPR    = key.NewBinding(key.WithKeys("x"), key.WithHelp("x", "preprints only"))
 	keyWeb    = key.NewBinding(key.WithKeys("b"), key.WithHelp("b", "browser"))
 	keyBack   = key.NewBinding(key.WithKeys("esc", "q", "backspace", "left", "h"), key.WithHelp("esc", "back"))
 )
 
 func runTUI(c *epmc.Client, recs []epmc.Record, hits int, raw, query, sort string) error {
-	l := list.New(nil, list.NewDefaultDelegate(), 0, 0)
-	l.AdditionalShortHelpKeys = func() []key.Binding { return []key.Binding{keyEnter, keySearch, keyMore, keyPDF, keyOpen, keyWeb} }
+	l := list.New(nil, oaDelegate{list.NewDefaultDelegate()}, 0, 0)
+	l.AdditionalShortHelpKeys = func() []key.Binding {
+		return []key.Binding{keyEnter, keySearch, keyMore, keyPPR, keyPDF, keyOpen, keyWeb}
+	}
 	in := textinput.New()
 	in.Prompt = "search: "
 	m := tuiModel{c: c, list: l, in: in, sort: sort}
@@ -82,6 +115,17 @@ func (m tuiModel) selected() *epmc.Record {
 	return nil
 }
 
+func (m tuiModel) title(n int) string {
+	t := "gorxiv"
+	if m.raw != "" {
+		t = fmt.Sprintf("%s — %d of %d", m.raw, n, m.hits)
+	}
+	if sf.Preprints {
+		t += " [preprints]"
+	}
+	return t
+}
+
 func (m *tuiModel) setResults(r resultsMsg) {
 	pos := m.list.Index()
 	items := make([]list.Item, len(r.recs))
@@ -96,17 +140,15 @@ func (m *tuiModel) setResults(r resultsMsg) {
 		m.list.Select(0)
 	}
 	m.raw, m.query, m.hits = r.raw, r.query, r.hits
-	m.list.Title = "gorxiv"
-	if r.raw != "" {
-		m.list.Title = fmt.Sprintf("%s — %d of %d", r.raw, len(r.recs), r.hits)
-	}
+	m.list.Title = m.title(len(r.recs))
 }
 
 // search re-runs the query for limit records. ponytail: "load more" refetches
 // from the first page (Search has no resume); fine for hundreds, expose the cursor if it drags.
 func (m tuiModel) search(raw string, limit int, keepPos bool) tea.Cmd {
+	f := sf // snapshot: Update may toggle sf while this runs
 	return func() tea.Msg {
-		q, err := epmc.Compose(raw, sf) // flag filters (--oa, --from, …) stick across searches
+		q, err := epmc.Compose(raw, f) // flag filters (--oa, --from, …) stick across searches
 		if err != nil {
 			return statusMsg(err.Error())
 		}
@@ -194,7 +236,13 @@ func (m tuiModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			break
 		}
 		r := m.selected()
+		pending := m.confirm
+		m.confirm = ""
 		switch {
+		case r != nil && key.Matches(msg, keyPDF) && saved(r) && pending != r.ID:
+			m.confirm = r.ID
+			m.status = "already have " + pdfPath(r) + " · press p again to re-download"
+			return m, nil
 		case r != nil && key.Matches(msg, keyPDF):
 			m.status = "downloading " + shortID(r) + "…"
 			return m, m.fetchPDF(r, false)
@@ -214,6 +262,14 @@ func (m tuiModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.in.SetValue(m.raw)
 			m.in.CursorEnd()
 			return m, m.in.Focus()
+		case key.Matches(msg, keyPPR):
+			sf.Preprints = !sf.Preprints
+			m.list.Title = m.title(len(m.list.Items()))
+			if m.raw == "" {
+				return m, nil
+			}
+			m.status = "searching…"
+			return m, m.search(m.raw, sLimit, false)
 		case key.Matches(msg, keyMore):
 			if n := len(m.list.Items()); n < m.hits {
 				m.status = "loading more…"
@@ -259,7 +315,7 @@ func (m tuiModel) View() string {
 // existing file and then launches cfg.Viewer on it.
 func (m tuiModel) fetchPDF(r *epmc.Record, open bool) tea.Cmd {
 	return func() tea.Msg {
-		dst := filepath.Join(cfg.PDFDir, slug(shortID(r))+".pdf")
+		dst := pdfPath(r)
 		msg := "have " + dst
 		if _, err := os.Stat(dst); !open || err != nil {
 			if err := os.MkdirAll(cfg.PDFDir, 0o755); err != nil {
