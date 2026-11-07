@@ -13,7 +13,7 @@
           pname = "gorxiv";
           version = self.shortRev or self.dirtyShortRev or "dev";
           src = self;
-          vendorHash = "sha256-xKgqKTn/AiQLWtuQ5NtgADL3Uxlug7T7u4gwlJujjAA=";
+          vendorHash = "sha256-DUPQjr6mmOJ3n44JbTZ6/7sTAhzNHZ2w4GcCRimqhro=";
           env.CGO_ENABLED = 0;
           ldflags = [ "-s" "-w" "-X github.com/btraven00/gorxiv/cmd.version=${self.shortRev or self.dirtyShortRev or "dev"}" ];
           meta.mainProgram = "gorxiv";

@@ -6,6 +6,7 @@ import (
 	"strings"
 	"unicode/utf8"
 
+	"github.com/charmbracelet/lipgloss"
 	"github.com/spf13/cobra"
 	"golang.org/x/term"
 
@@ -23,6 +24,15 @@ prints a record's metadata, and downloads its PDF when one is openly available.`
 	Version:       version,
 	SilenceUsage:  true,
 	SilenceErrors: true, // main prints the error
+	Args:          cobra.NoArgs,
+	// bare `gorxiv` opens the TUI with an empty search box
+	RunE: func(cmd *cobra.Command, args []string) error {
+		sort, err := epmc.SortParam(sSort)
+		if err != nil {
+			return err
+		}
+		return runTUI(client(), nil, 0, "", "", sort)
+	},
 }
 
 func Execute() error { return rootCmd.Execute() }
@@ -79,3 +89,13 @@ func wrap(s string, w int, indent string) string {
 func pad(s string, w int) string {
 	return s + strings.Repeat(" ", max(0, w-utf8.RuneCountInString(s)))
 }
+
+// Styles; lipgloss drops them when stdout is not a terminal or NO_COLOR is set.
+var (
+	stTitle = lipgloss.NewStyle().Bold(true)
+	stLabel = lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("4"))
+	stID    = lipgloss.NewStyle().Foreground(lipgloss.Color("6"))
+	stYear  = lipgloss.NewStyle().Foreground(lipgloss.Color("3"))
+	stOA    = lipgloss.NewStyle().Foreground(lipgloss.Color("2"))
+	stDim   = lipgloss.NewStyle().Faint(true)
+)

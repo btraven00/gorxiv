@@ -14,6 +14,7 @@ record's metadata, and download its PDF when one is openly available.
     gorxiv search 'perturb-seq AND "cancer cell lines"' --preprints --from 2025 -n 10
     gorxiv search --author "Dempster JM" --sort date --ids     # bare IDs, pipeable
     gorxiv search 'TITLE:"mix-seq"' --json                      # raw core records
+    gorxiv search perturb-seq -i      # TUI (bare `gorxiv` too): j/k, s search, n more, / filter, enter details, p pdf, o open in zathura, b browser
 
     # metadata for a PMID, PMCID, PPR id or DOI
     gorxiv show 10.64898/2026.08.24.746802
@@ -21,9 +22,14 @@ record's metadata, and download its PDF when one is openly available.
     # PDF into a directory
     gorxiv pdf PMC7453022 --out papers/
 
+    # optional ~/.config/gorxiv/config (defaults shown)
+    pdf_dir = ~/.config/gorxiv/pdfs   # where `pdf` and the TUI save; --out overrides
+    viewer  = zathura                 # TUI `o`; extra args allowed, e.g. zathura --fork
+
 Search flags: `--preprints` (SRC:PPR), `--oa` (OPEN_ACCESS:y), `--from/--to` (YYYY, YYYY-MM or
 YYYY-MM-DD on FIRST_PDATE), `--author`, `--sort relevance|date|cited`, `-n/--limit` (cursor paging),
-`--print-query` to see the composed query.
+`--print-query` to see the composed query. On a terminal results print in color with full titles;
+piped, they print as a plain table (`NO_COLOR` also turns color off).
 
 ## What `pdf` tries
 

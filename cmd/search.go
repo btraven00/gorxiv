@@ -8,6 +8,7 @@ import (
 	"unicode/utf8"
 
 	"github.com/spf13/cobra"
+	"golang.org/x/term"
 
 	"github.com/btraven00/gorxiv/epmc"
 )
@@ -18,6 +19,7 @@ var (
 	sLimit      int
 	sJSON, sIDs bool
 	sPrintQuery bool
+	sTUI        bool
 )
 
 var searchCmd = &cobra.Command{
@@ -38,11 +40,17 @@ var searchCmd = &cobra.Command{
 		if sPrintQuery {
 			fmt.Fprintln(os.Stderr, "query:", q)
 		}
-		recs, hits, err := client().Search(context.Background(), q, sort, sLimit, sJSON)
+		c := client()
+		if sTUI && len(args) == 0 {
+			return runTUI(c, nil, 0, "", "", sort)
+		}
+		recs, hits, err := c.Search(context.Background(), q, sort, sLimit, sJSON || sTUI)
 		if err != nil {
 			return err
 		}
 		switch {
+		case sTUI:
+			return runTUI(c, recs, hits, strings.Join(args, " "), q, sort)
 		case sJSON:
 			raws := make([]string, len(recs))
 			for i, r := range recs {
@@ -53,6 +61,8 @@ var searchCmd = &cobra.Command{
 			for _, r := range recs {
 				fmt.Println(shortID(&r))
 			}
+		case term.IsTerminal(int(os.Stdout.Fd())):
+			printCards(recs)
 		default:
 			printTable(recs)
 			fmt.Fprintf(os.Stderr, "%d of %d hits\n", len(recs), hits)
@@ -72,6 +82,7 @@ func init() {
 	f.IntVarP(&sLimit, "limit", "n", 20, "max records (pages through results)")
 	f.BoolVar(&sJSON, "json", false, "print raw core records as a JSON array")
 	f.BoolVar(&sIDs, "ids", false, "print bare IDs, one per line (accepted by show/pdf)")
+	f.BoolVarP(&sTUI, "tui", "i", false, "browse results interactively (enter: details, p: pdf, o: browser)")
 	f.BoolVar(&sPrintQuery, "print-query", false, "print the composed query to stderr")
 	rootCmd.AddCommand(searchCmd)
 }
@@ -132,5 +143,27 @@ func printTable(recs []epmc.Record) {
 	line(row{"ID", "SRC", "YEAR", "AUTHOR", "TITLE", "DOI", "FLAGS"})
 	for _, r := range rows {
 		line(r)
+	}
+}
+
+// meta is the one-line summary under a title: id · year · first author · source · flags · doi.
+func meta(r *epmc.Record) string {
+	parts := []string{stID.Render(shortID(r)), stYear.Render(r.PubYear), firstAuthor(r.AuthorString), r.Source}
+	if f := flag(r); f != "-" {
+		parts = append(parts, stOA.Render(f))
+	}
+	if r.DOI != "" && r.DOI != shortID(r) {
+		parts = append(parts, stDim.Render(r.DOI))
+	}
+	return strings.Join(parts, stDim.Render(" · "))
+}
+
+// printCards is the terminal layout: full wrapped title, then a metadata line.
+func printCards(recs []epmc.Record) {
+	w := width()
+	for i := range recs {
+		r := &recs[i]
+		fmt.Printf("%s %s\n    %s\n\n", stDim.Render(fmt.Sprintf("%3d", i+1)),
+			stTitle.Render(strings.TrimLeft(wrap(epmc.StripTags(r.Title), w-4, "    "), " ")), meta(r))
 	}
 }

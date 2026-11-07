@@ -31,6 +31,9 @@ The body must start with %PDF-. Saved as <id>.pdf (DOIs slugged).`,
 		if err != nil {
 			return err
 		}
+		if pdfOut == "" {
+			pdfOut = cfg.PDFDir
+		}
 		if err := os.MkdirAll(pdfOut, 0o755); err != nil {
 			return err
 		}
@@ -51,7 +54,7 @@ The body must start with %PDF-. Saved as <id>.pdf (DOIs slugged).`,
 }
 
 func init() {
-	pdfCmd.Flags().StringVarP(&pdfOut, "out", "o", ".", "output directory")
+	pdfCmd.Flags().StringVarP(&pdfOut, "out", "o", "", "output directory (default: pdf_dir from ~/.config/gorxiv/config, else ~/.config/gorxiv/pdfs)")
 	rootCmd.AddCommand(pdfCmd)
 }
 

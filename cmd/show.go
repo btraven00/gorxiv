@@ -3,6 +3,7 @@ package cmd
 import (
 	"context"
 	"fmt"
+	"io"
 	"os"
 	"strings"
 
@@ -29,7 +30,7 @@ var showCmd = &cobra.Command{
 			fmt.Println(string(r.Raw))
 			return nil
 		}
-		printRecord(r)
+		printRecord(os.Stdout, r, min(width(), 100))
 		return nil
 	},
 }
@@ -39,20 +40,19 @@ func init() {
 	rootCmd.AddCommand(showCmd)
 }
 
-func printRecord(r *epmc.Record) {
-	w := min(width(), 100)
+func printRecord(out io.Writer, r *epmc.Record, w int) {
 	field := func(k, v string) {
 		if strings.TrimSpace(v) != "" {
-			fmt.Printf("%-12s %s\n", k, v)
+			fmt.Fprintf(out, "%s %s\n", stLabel.Render(fmt.Sprintf("%-12s", k)), v)
 		}
 	}
 	block := func(k, v string) {
 		if v != "" {
-			fmt.Printf("%s\n%s\n", k, wrap(v, w-2, "  "))
+			fmt.Fprintf(out, "%s\n%s\n", stLabel.Render(k), wrap(v, w-2, "  "))
 		}
 	}
-	fmt.Println(wrap(epmc.StripTags(r.Title), w, ""))
-	fmt.Println()
+	fmt.Fprintln(out, stTitle.Render(wrap(epmc.StripTags(r.Title), w, "")))
+	fmt.Fprintln(out)
 	field("Source", r.Source+":"+r.ID)
 	venue := r.JournalInfo.Journal.Title
 	if venue != "" {
@@ -83,7 +83,7 @@ func printRecord(r *epmc.Record) {
 		}
 		field("Version", fmt.Sprintf("v%d; all: %s", r.VersionNumber, strings.Join(vs, ", ")))
 	}
-	fmt.Println()
+	fmt.Fprintln(out)
 
 	var names []string
 	var affs []string
@@ -102,24 +102,24 @@ func printRecord(r *epmc.Record) {
 	}
 	block(fmt.Sprintf("Authors (%d)", len(r.AuthorList.Author)), strings.Join(names, ", "))
 	if len(affs) > 0 {
-		fmt.Printf("Affiliations (%d unique)\n", len(affs))
+		fmt.Fprintln(out, stLabel.Render(fmt.Sprintf("Affiliations (%d unique)", len(affs))))
 		const maxAff = 8 // ponytail: short list; --json has them all
 		for i, a := range affs {
 			if i == maxAff {
-				fmt.Printf("  … %d more (--json for all)\n", len(affs)-maxAff)
+				fmt.Fprintf(out, "  … %d more (--json for all)\n", len(affs)-maxAff)
 				break
 			}
-			fmt.Printf("  - %s\n", trunc(a, w-4))
+			fmt.Fprintf(out, "  - %s\n", trunc(a, w-4))
 		}
 	}
 	block("Keywords", strings.Join(r.KeywordList.Keyword, "; "))
-	fmt.Println()
+	fmt.Fprintln(out)
 	block("Abstract", epmc.StripTags(r.AbstractText))
 	if ft := r.FullTextURLList.FullTextURL; len(ft) > 0 {
-		fmt.Println()
-		fmt.Println("Full text")
+		fmt.Fprintln(out)
+		fmt.Fprintln(out, stLabel.Render("Full text"))
 		for _, f := range ft {
-			fmt.Printf("  %-24s %-5s %-10s %s\n", f.Availability, f.DocumentStyle, f.Site, f.URL)
+			fmt.Fprintf(out, "  %-24s %-5s %-10s %s\n", f.Availability, f.DocumentStyle, f.Site, f.URL)
 		}
 	}
 }
